@@ -5,7 +5,6 @@
 # Author: Mathieu Blondel, Tom Dupre la Tour
 # License: BSD 3 clause
 
-from libc.math cimport fabs
 
 
 def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
@@ -25,7 +24,7 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
 
             # projected gradient
             pg = min(0., grad) if W[i, t] == 0 else grad
-            violation += fabs(pg)
+            violation += abs(pg)
 
             # Hessian
             hess = HHt[t, t]
