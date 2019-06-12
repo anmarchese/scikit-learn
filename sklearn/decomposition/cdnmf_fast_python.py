@@ -13,7 +13,7 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
     violation = 0
     n_components = W.shape[1]
     n_samples = W.shape[0]  # n_features for H update
-
+    print('Running Andys NMF')
     for s in range(n_components):
         t = permutation[s]
         for i in range(n_samples):
