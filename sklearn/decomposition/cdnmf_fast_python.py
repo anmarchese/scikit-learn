@@ -33,7 +33,9 @@ def _update_cdnmf_fast_python(W, HHt, XHt, permutation,n_jobs):
     violation = 0
     n_components = W.shape[1]
     n_samples = W.shape[0]  # n_features for H update
+    print('NMF')
     for s in range(n_components):
+        print('Looping on component {}'.format(str(s)))
         t = permutation[s]
         pool = Pool(n_jobs)
         par_help = partial(compute_sample_stuff, W=W,HHt=HHt,XHt=XHt,permutation=permutation,t=t)
