@@ -20,7 +20,8 @@ from ..utils.extmath import randomized_svd, safe_sparse_dot, squared_norm
 from ..utils.extmath import safe_min
 from ..utils.validation import check_is_fitted, check_non_negative
 from ..exceptions import ConvergenceWarning
-from .cdnmf_fast_python import _update_cdnmf_fast
+from .cdnmf_fast import _update_cdnmf_fast
+from .cdnmf_fast_python import _update_cdnmf_fast_python
 
 EPSILON = np.finfo(np.float32).eps
 
@@ -389,7 +390,7 @@ def _initialize_nmf(X, n_components, init=None, eps=1e-6,
 
 
 def _update_coordinate_descent(X, W, Ht, l1_reg, l2_reg, shuffle,
-                               random_state):
+                               random_state,n_jobs):
     """Helper function for _fit_coordinate_descent
 
     Update W to minimize the objective function, iterating once over all
@@ -416,12 +417,15 @@ def _update_coordinate_descent(X, W, Ht, l1_reg, l2_reg, shuffle,
         permutation = np.arange(n_components)
     # The following seems to be required on 64-bit Windows w/ Python 3.5.
     permutation = np.asarray(permutation, dtype=np.intp)
-    return _update_cdnmf_fast(W, HHt, XHt, permutation)
+    if n_jobs==1:
+        return _update_cdnmf_fast(W, HHt, XHt, permutation)
+    else:
+        return _update_cdnmf_fast_python(W, HHt, XHt, permutation,n_jobs)
 
 
 def _fit_coordinate_descent(X, W, H, tol=1e-4, max_iter=200, l1_reg_W=0,
                             l1_reg_H=0, l2_reg_W=0, l2_reg_H=0, update_H=True,
-                            verbose=0, shuffle=False, random_state=None):
+                            verbose=0, shuffle=False, random_state=None,n_jobs=1):
     """Compute Non-negative Matrix Factorization (NMF) with Coordinate Descent
 
     The objective function is minimized with an alternating minimization of W
@@ -502,11 +506,11 @@ def _fit_coordinate_descent(X, W, H, tol=1e-4, max_iter=200, l1_reg_W=0,
 
         # Update W
         violation += _update_coordinate_descent(X, W, Ht, l1_reg_W,
-                                                l2_reg_W, shuffle, rng)
+                                                l2_reg_W, shuffle, rng,n_jobs)
         # Update H
         if update_H:
             violation += _update_coordinate_descent(X.T, Ht, W, l1_reg_H,
-                                                    l2_reg_H, shuffle, rng)
+                                                    l2_reg_H, shuffle, rng,n_jobs)
 
         if n_iter == 0:
             violation_init = violation
@@ -841,7 +845,7 @@ def non_negative_factorization(X, W=None, H=None, n_components=None,
                                beta_loss='frobenius', tol=1e-4,
                                max_iter=200, alpha=0., l1_ratio=0.,
                                regularization=None, random_state=None,
-                               verbose=0, shuffle=False):
+                               verbose=0, shuffle=False ,n_jobs=1):
     r"""Compute Non-negative Matrix Factorization (NMF)
 
     Find two non-negative matrices (W, H) whose product approximates the non-
@@ -1054,7 +1058,7 @@ def non_negative_factorization(X, W=None, H=None, n_components=None,
                                                update_H=update_H,
                                                verbose=verbose,
                                                shuffle=shuffle,
-                                               random_state=random_state)
+                                               random_state=random_state,n_jobs=n_jobs)
     elif solver == 'mu':
         W, H, n_iter = _fit_multiplicative_update(X, W, H, beta_loss, max_iter,
                                                   tol, l1_reg_W, l1_reg_H,
@@ -1225,7 +1229,7 @@ class NMF(BaseEstimator, TransformerMixin):
     def __init__(self, n_components=None, init=None, solver='cd',
                  beta_loss='frobenius', tol=1e-4, max_iter=200,
                  random_state=None, alpha=0., l1_ratio=0., verbose=0,
-                 shuffle=False):
+                 shuffle=False,n_jobs=1):
         self.n_components = n_components
         self.init = init
         self.solver = solver
@@ -1237,6 +1241,7 @@ class NMF(BaseEstimator, TransformerMixin):
         self.l1_ratio = l1_ratio
         self.verbose = verbose
         self.shuffle = shuffle
+        self.n_jobs=n_jobs
 
     def fit_transform(self, X, y=None, W=None, H=None):
         """Learn a NMF model for the data X and returns the transformed data.
@@ -1269,7 +1274,7 @@ class NMF(BaseEstimator, TransformerMixin):
             tol=self.tol, max_iter=self.max_iter, alpha=self.alpha,
             l1_ratio=self.l1_ratio, regularization='both',
             random_state=self.random_state, verbose=self.verbose,
-            shuffle=self.shuffle)
+            shuffle=self.shuffle,n_jobs=self.n_jobs)
 
         self.reconstruction_err_ = _beta_divergence(X, W, H, self.beta_loss,
                                                     square_root=True)
@@ -1318,7 +1323,7 @@ class NMF(BaseEstimator, TransformerMixin):
             beta_loss=self.beta_loss, tol=self.tol, max_iter=self.max_iter,
             alpha=self.alpha, l1_ratio=self.l1_ratio, regularization='both',
             random_state=self.random_state, verbose=self.verbose,
-            shuffle=self.shuffle)
+            shuffle=self.shuffle,n_jobs=self.n_jobs)
 
         return W
 
