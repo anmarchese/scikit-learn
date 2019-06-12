@@ -20,7 +20,7 @@ from ..utils.extmath import randomized_svd, safe_sparse_dot, squared_norm
 from ..utils.extmath import safe_min
 from ..utils.validation import check_is_fitted, check_non_negative
 from ..exceptions import ConvergenceWarning
-from .cdnmf_fast import _update_cdnmf_fast
+from .cdnmf_fast_python import _update_cdnmf_fast
 
 EPSILON = np.finfo(np.float32).eps
 
