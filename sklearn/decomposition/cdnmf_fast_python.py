@@ -29,13 +29,13 @@ def compute_sample_stuff(i,W, HHt, XHt, permutation,t):
     return violation, W[i,:]
 
 
-def _update_cdnmf_fast(W, HHt, XHt, permutation):
+def _update_cdnmf_fast(W, HHt, XHt, permutation,n_jobs):
     violation = 0
     n_components = W.shape[1]
     n_samples = W.shape[0]  # n_features for H update
     for s in range(n_components):
         t = permutation[s]
-        pool = Pool(4)
+        pool = Pool(n_jobs)
         par_help = partial(compute_sample_stuff, W=W,HHt=HHt,XHt=XHt,permutation=permutation,t=t)
         violations, W_temps = zip(*pool.map(par_help, range(n_samples)))
         violation += sum(violations)
