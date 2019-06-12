@@ -20,7 +20,6 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
     with nogil:
         for s in range(n_components):
             t = permutation[s]
-            dfdfs
             for i in range(n_samples):
                 # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
                 grad = -XHt[i, t]
