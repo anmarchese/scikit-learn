@@ -29,7 +29,7 @@ def compute_sample_stuff(i,W, HHt, XHt, permutation,t):
     return violation, W[i,:]
 
 
-def _update_cdnmf_fast(W, HHt, XHt, permutation,n_jobs):
+def _update_cdnmf_fast_python(W, HHt, XHt, permutation,n_jobs):
     violation = 0
     n_components = W.shape[1]
     n_samples = W.shape[0]  # n_features for H update
