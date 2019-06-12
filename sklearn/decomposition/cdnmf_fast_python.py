@@ -7,8 +7,7 @@
 
 
 
-def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
-                       Py_ssize_t[::1] permutation):
+def _update_cdnmf_fast(W, HHt, XHt, permutation):
     violation = 0
     n_components = W.shape[1]
     n_samples = W.shape[0]  # n_features for H update
