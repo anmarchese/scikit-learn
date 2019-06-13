@@ -61,11 +61,14 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
 
                 # Hessian
                 hess = HHt[t, t]
-
-                if hess != 0:
-                    W_arr[i] = max(W[i, t] - grad / hess, 0.)
-            for i in range(n_samples):
-                W[i,t] = W_arr[i]
+                with gil:
+                    if hess != 0:
+                        W_arr[i] = max(W[i, t] - grad / hess, 0.)
+                    else:
+                        W_arr[i] = W[i, t]
+            with gil:
+                for i in range(n_samples):
+                    W[i,t] = W_arr[i]
 
 
       return violation
