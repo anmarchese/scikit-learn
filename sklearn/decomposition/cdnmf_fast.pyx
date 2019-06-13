@@ -20,16 +20,16 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
     with nogil:
         for s in range(n_components):
             t = permutation[s]
-            for i in prange(n_samples,num_threads=4,nogil=True):
+            for i in prange(n_samples,n_threads=4,nogil=True):
                 # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
                 grad = -XHt[i, t]
 
                 for r in range(n_components):
-                    grad = grad + HHt[t, r] * W[i, r]
+                    grad += HHt[t, r] * W[i, r]
 
                 # projected gradient
                 pg = min(0., grad) if W[i, t] == 0 else grad
-                violation = violation + fabs(pg)
+                violation += fabs(pg)
 
                 # Hessian
                 hess = HHt[t, t]
