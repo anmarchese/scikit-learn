@@ -17,23 +17,26 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
     cdef double grad, pg, hess
     cdef Py_ssize_t i, r, s, t
     
-    for s in range(n_components):
-        t = permutation[s]
-        for i in prange(n_samples,num_threads=4):
-            # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
-            grad = -XHt[i, t]
+    with nogil:
+      violation=0
+      for s in range(n_components):
+          t = permutation[s]
 
-            for r in range(n_components):
-                grad = grad + HHt[t, r] * W[i, r]
+          for i in prange(n_samples,num_threads=4):
+              # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
+              grad = -XHt[i, t]
 
-            # projected gradient
-            pg = min(0., grad) if W[i, t] == 0 else grad
-            violation = violation + fabs(pg)
+              for r in range(n_components):
+                  grad = grad + HHt[t, r] * W[i, r]
 
-            # Hessian
-            hess = HHt[t, t]
+              # projected gradient
+              pg = min(0., grad) if W[i, t] == 0 else grad
+              violation = violation + fabs(pg)
 
-            if hess != 0:
-                W[i, t] = max(W[i, t] - grad / hess, 0.)
+              # Hessian
+              hess = HHt[t, t]
+
+              if hess != 0:
+                  W[i, t] = max(W[i, t] - grad / hess, 0.)
                 
     return violation
