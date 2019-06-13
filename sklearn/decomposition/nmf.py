@@ -21,7 +21,6 @@ from ..utils.extmath import safe_min
 from ..utils.validation import check_is_fitted, check_non_negative
 from ..exceptions import ConvergenceWarning
 from .cdnmf_fast import _update_cdnmf_fast
-from .cdnmf_fast_python import _update_cdnmf_fast_python
 
 EPSILON = np.finfo(np.float32).eps
 
@@ -417,10 +416,7 @@ def _update_coordinate_descent(X, W, Ht, l1_reg, l2_reg, shuffle,
         permutation = np.arange(n_components)
     # The following seems to be required on 64-bit Windows w/ Python 3.5.
     permutation = np.asarray(permutation, dtype=np.intp)
-    if n_jobs==1:
-        return _update_cdnmf_fast(W, HHt, XHt, permutation)
-    else:
-        return _update_cdnmf_fast_python(W, HHt, XHt, permutation)
+    return _update_cdnmf_fast(W, HHt, XHt, permutation,n_jobs)
 
 
 def _fit_coordinate_descent(X, W, H, tol=1e-4, max_iter=200, l1_reg_W=0,
