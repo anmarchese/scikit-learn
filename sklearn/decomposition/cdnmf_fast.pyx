@@ -8,6 +8,7 @@
 cimport cython
 from libc.math cimport fabs
 from cython.parallel import prange
+import numpy as np
 
 def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
                        Py_ssize_t[::1] permutation, int n_jobs):
