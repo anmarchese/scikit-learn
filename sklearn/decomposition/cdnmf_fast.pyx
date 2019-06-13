@@ -16,6 +16,7 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
     cdef Py_ssize_t n_samples = W.shape[0]  # n_features for H update
     cdef double grad, pg, hess
     cdef Py_ssize_t i, r, s, t
+    cdef dict W_i
 
     if n_jobs == 1:
       with nogil:
@@ -42,7 +43,7 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
 
       return violation
     else:
-      W_arr = {}
+
       with nogil:
         violation=0
         for s in range(n_components):
@@ -61,14 +62,14 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
 
                 # Hessian
                 hess = HHt[t, t]
-                with gil:
-                    if hess != 0:
-                        W_arr[i] = max(W[i, t] - grad / hess, 0.)
-                    else:
-                        W_arr[i] = W[i, t]
-            with gil:
-                for i in range(n_samples):
-                    W[i,t] = W_arr[i]
+
+                if hess != 0:
+                    W_i[i] = max(W[i, t] - grad / hess, 0.)
+                else:
+                    W_i[i] = W[i, t]
+
+            for i in range(n_samples):
+                W[i,t] = W_i[i]
 
 
       return violation
