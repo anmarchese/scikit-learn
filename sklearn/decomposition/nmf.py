@@ -420,7 +420,7 @@ def _update_coordinate_descent(X, W, Ht, l1_reg, l2_reg, shuffle,
     if n_jobs==1:
         return _update_cdnmf_fast(W, HHt, XHt, permutation)
     else:
-        return _update_cdnmf_fast_python(W, HHt, XHt, permutation,n_jobs)
+        return _update_cdnmf_fast_python(W, HHt, XHt, permutation)
 
 
 def _fit_coordinate_descent(X, W, H, tol=1e-4, max_iter=200, l1_reg_W=0,
