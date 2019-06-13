@@ -4,46 +4,37 @@
 
 # Author: Mathieu Blondel, Tom Dupre la Tour
 # License: BSD 3 clause
-from joblib import Parallel, delayed
-from functools import partial
-from multiprocessing import Pool
 
-def compute_sample_stuff(i,W, HHt, XHt, permutation,t):
-    # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
-    violation=0
-    grad = -XHt[i, t]
+cimport cython
+from libc.math cimport fabs
+from cython.parallel import prange
 
-    for r in range(W.shape[1]):
-        grad += HHt[t, r] * W[i, r]
+def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
+                       Py_ssize_t[::1] permutation):
+    cdef double violation = 0
+    cdef Py_ssize_t n_components = W.shape[1]
+    cdef Py_ssize_t n_samples = W.shape[0]  # n_features for H update
+    cdef double grad, pg, hess
+    cdef Py_ssize_t i, r, s, t
 
-    # projected gradient
-    pg = min(0., grad) if W[i, t] == 0 else grad
-    violation += abs(pg)
+    with nogil:
+        for s in range(n_components):
+            t = permutation[s]
+            for i in prange(n_samples):
+                # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
+                grad = -XHt[i, t]
 
-    # Hessian
-    hess = HHt[t, t]
+                for r in range(n_components):
+                    grad += HHt[t, r] * W[i, r]
 
-    if hess != 0:
-        W[i, t] = max(W[i, t] - grad / hess, 0.)
+                # projected gradient
+                pg = min(0., grad) if W[i, t] == 0 else grad
+                violation += fabs(pg)
 
-    return violation, W[i,:]
+                # Hessian
+                hess = HHt[t, t]
 
-
-def _update_cdnmf_fast_python(W, HHt, XHt, permutation,n_jobs):
-    violation = 0
-    n_components = W.shape[1]
-    n_samples = W.shape[0]  # n_features for H update
-    print('NMF')
-    for s in range(n_components):
-        print('Looping on component {}'.format(str(s)))
-        t = permutation[s]
-        pool = Pool(n_jobs)
-        par_help = partial(compute_sample_stuff, W=W,HHt=HHt,XHt=XHt,permutation=permutation,t=t)
-        violations, W_temps = zip(*pool.map(par_help, range(n_samples)))
-        violation += sum(violations)
-        for i in range(n_samples):
-            W[i,:] = W_temps[i]
-        pool.close()
-        pool.join()
-
+                if hess != 0:
+                    W[i, t] = max(W[i, t] - grad / hess, 0.)
+                
     return violation
