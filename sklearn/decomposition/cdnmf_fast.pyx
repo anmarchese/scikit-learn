@@ -16,7 +16,7 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
     cdef Py_ssize_t n_samples = W.shape[0]  # n_features for H update
     cdef double grad, pg, hess
     cdef Py_ssize_t i, r, s, t
-    
+
     if n_jobs == 1:
       with nogil:
         violation=0
@@ -46,13 +46,13 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
         violation=0
         for s in range(n_components):
             t = permutation[s]
-
-            for i in range(n_samples):
+            W_copy = W.copy()
+            for i in prange(n_samples,num_threads=n_jobs):
                 # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
                 grad = -XHt[i, t]
 
-                for r in prange(n_components,num_threads=n_jobs):
-                    grad += HHt[t, r] * W[i, r]
+                for r in range(n_components):
+                    grad = grad + HHt[t, r] * W[i, r]
 
                 # projected gradient
                 pg = min(0., grad) if W[i, t] == 0 else grad
@@ -62,6 +62,8 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
                 hess = HHt[t, t]
 
                 if hess != 0:
-                    W[i, t] = max(W[i, t] - grad / hess, 0.)
+                    W_copy[i, t] = max(W[i, t] - grad / hess, 0.)
+            W = W_copy.copy()
+                    
 
       return violation
