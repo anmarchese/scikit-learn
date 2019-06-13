@@ -31,7 +31,7 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
 
               # projected gradient
               pg = min(0., grad) if W[i, t] == 0 else grad
-              violation = violation + fabs(pg)
+              violation += fabs(pg)
 
               # Hessian
               hess = HHt[t, t]
