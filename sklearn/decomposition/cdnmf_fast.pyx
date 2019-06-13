@@ -10,7 +10,7 @@ from libc.math cimport fabs
 from cython.parallel import prange
 
 def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
-                       Py_ssize_t[::1] permutation):
+                       Py_ssize_t[::1] permutation, double n_jobs):
     cdef double violation = 0
     cdef Py_ssize_t n_components = W.shape[1]
     cdef Py_ssize_t n_samples = W.shape[0]  # n_features for H update
@@ -22,7 +22,7 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
       for s in range(n_components):
           t = permutation[s]
 
-          for i in prange(n_samples,num_threads=4):
+          for i in prange(n_samples,num_threads=n_jobs):
               # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
               grad = -XHt[i, t]
 
