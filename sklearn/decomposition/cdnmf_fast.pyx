@@ -47,11 +47,11 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
         for s in range(n_components):
             t = permutation[s]
 
-            for i in prange(n_samples,num_threads=n_jobs):
+            for i in range(n_samples):
                 # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
                 grad = -XHt[i, t]
 
-                for r in range(n_components):
+                for r in prange(n_components,num_threads=n_jobs):
                     grad = grad + HHt[t, r] * W[i, r]
 
                 # projected gradient
