@@ -10,7 +10,7 @@ from libc.math cimport fabs
 from cython.parallel import prange
 
 def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
-                       Py_ssize_t[::1] permutation, double n_jobs):
+                       Py_ssize_t[::1] permutation, int n_jobs):
     cdef double violation = 0
     cdef Py_ssize_t n_components = W.shape[1]
     cdef Py_ssize_t n_samples = W.shape[0]  # n_features for H update
