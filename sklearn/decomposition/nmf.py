@@ -498,15 +498,15 @@ def _fit_coordinate_descent(X, W, H, tol=1e-4, max_iter=200, l1_reg_W=0,
     rng = check_random_state(random_state)
 
     for n_iter in range(max_iter):
-        print('Starting iter {}'.format(n_iter))
+        #print('Starting iter {}'.format(n_iter))
         violation = 0.
 
         # Update W
-        print('Update W')
+        #print('Update W')
         violation += _update_coordinate_descent(X, W, Ht, l1_reg_W,
                                                 l2_reg_W, shuffle, rng,n_jobs)
         # Update H
-        print('Update H')
+        #print('Update H')
         if update_H:
             violation += _update_coordinate_descent(X.T, Ht, W, l1_reg_H,
                                                     l2_reg_H, shuffle, rng,n_jobs)
@@ -1051,7 +1051,7 @@ def non_negative_factorization(X, W=None, H=None, n_components=None,
         alpha, l1_ratio, regularization)
 
     if solver == 'cd':
-        print('Starting Coordinate Descent')
+        #print('Starting Coordinate Descent')
         W, H, n_iter = _fit_coordinate_descent(X, W, H, tol, max_iter,
                                                l1_reg_W, l1_reg_H,
                                                l2_reg_W, l2_reg_H,
