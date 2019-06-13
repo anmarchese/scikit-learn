@@ -16,7 +16,7 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
     cdef Py_ssize_t n_samples = W.shape[0]  # n_features for H update
     cdef double grad, pg, hess
     cdef Py_ssize_t i, r, s, t
-    cdef list W_i
+    cdef double[:] W_i = np.zeros((n_samples,))
 
     if n_jobs == 1:
       with nogil:
