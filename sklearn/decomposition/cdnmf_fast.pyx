@@ -16,25 +16,24 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
     cdef Py_ssize_t n_samples = W.shape[0]  # n_features for H update
     cdef double grad, pg, hess
     cdef Py_ssize_t i, r, s, t
+    
+    for s in range(n_components):
+        t = permutation[s]
+        for i in prange(n_samples,num_threads=4,nogil=True):
+            # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
+            grad = -XHt[i, t]
 
-    with nogil:
-        for s in range(n_components):
-            t = permutation[s]
-            for i in prange(n_samples,n_threads=4,nogil=True):
-                # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
-                grad = -XHt[i, t]
+            for r in range(n_components):
+                grad = grad + HHt[t, r] * W[i, r]
 
-                for r in range(n_components):
-                    grad = grad + HHt[t, r] * W[i, r]
+            # projected gradient
+            pg = min(0., grad) if W[i, t] == 0 else grad
+            violation = violation + fabs(pg)
 
-                # projected gradient
-                pg = min(0., grad) if W[i, t] == 0 else grad
-                violation = violation + fabs(pg)
+            # Hessian
+            hess = HHt[t, t]
 
-                # Hessian
-                hess = HHt[t, t]
-
-                if hess != 0:
-                    W[i, t] = max(W[i, t] - grad / hess, 0.)
+            if hess != 0:
+                W[i, t] = max(W[i, t] - grad / hess, 0.)
                 
     return violation
