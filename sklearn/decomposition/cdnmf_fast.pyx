@@ -42,11 +42,12 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
 
       return violation
     else:
+      W_arr = {}
       with nogil:
         violation=0
         for s in range(n_components):
             t = permutation[s]
-            W_copy = W
+
             for i in prange(n_samples,num_threads=n_jobs):
                 # gradient = GW[t, i] where GW = np.dot(W, HHt) - XHt
                 grad = -XHt[i, t]
@@ -62,8 +63,9 @@ def _update_cdnmf_fast(double[:, ::1] W, double[:, :] HHt, double[:, :] XHt,
                 hess = HHt[t, t]
 
                 if hess != 0:
-                    W_copy[i, t] = max(W[i, t] - grad / hess, 0.)
-            W = W_copy
-                    
+                    W_arr[i] = max(W[i, t] - grad / hess, 0.)
+            for i in range(n_samples):
+                W[i,t] = W_arr[i]
+
 
       return violation
