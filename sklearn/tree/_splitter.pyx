@@ -695,6 +695,7 @@ cdef class RandomSplitter(BaseDenseSplitter):
         # for good splitting) by ancestor nodes and save the information on
         # newly discovered constant features to spare computation on descendant
         # nodes.
+        print(features)
         while (f_i > n_total_constants and  # Stop early if remaining features
                                             # are constant
                 (n_visited_features < max_features or
